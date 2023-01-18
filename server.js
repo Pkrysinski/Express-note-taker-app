@@ -1,27 +1,34 @@
 const express = require('express');
 const path = require('path');
-
-const app = express();
+const fs = require('fs');
+const util = require('util');
+const notes = require('./db/db.json');
+const uuid = require('./helpers/uuid');
 
 const PORT = process.env.port || 3001;
 
-// Invoke app.use() and serve static files from the '/public' folder
+const app = express();
+
+// Middleware for parsing JSON and urlencoded form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(express.static('public'));
 
-app.get('/', (req, res) => res.send('Navigate to * or /notes'));
-
-// GET /notes should return the notes.html file.
-app.get('/api/notes', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/notes.html'));
+// Wildcard route to direct users to the index.html page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// GET * should return the index.html file.
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
-    console.info(`${req.method} request received to get public/index.html`);
+// Send user to the notes page
+app.get('/notes', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/notes.html'));
 });
 
-// POST request to add a note
+// Get the notes
+app.get('/api/notes', (req, res) => res.json(notes));
+
+//POST route for adding a note
 app.post('/api/notes', (req, res) => {
   // Log that a POST request was received
   console.info(`${req.method} request received to add a note`);
@@ -33,31 +40,17 @@ app.post('/api/notes', (req, res) => {
   if (title && text) {
     // Variable for the object we will save
     const newNote = {
-        title,
-        text,
+      title,
+      text,
+      id: uuid(),
     };
 
-    // Obtain existing reviews
-    fs.readFile('./db/db.json', 'utf8', (err, data) => {
-      if (err) {
-        console.error(err);
-      } else {
-        // Convert string into JSON object
-        const parsedNotes = JSON.parse(data);
-
-        // Add a new review
-        parsedNotes.push(newNote);
-
-        // Write updated reviews back to the file
-        fs.writeFile(
-          './db/db.json',
-          JSON.stringify(parsedNotes, null, 4),
-          (writeErr) =>
-            writeErr
-              ? console.error(writeErr)
-              : console.info('Successfully updated reviews!')
-        );
-      }
+    // Write the string to a file
+    fs.readFile('./db/db.json', 'utf-8', function(err, data){
+      var parsedNotes = JSON.parse(data);
+      parsedNotes.push(newNote);
+  
+      fs.writeFile("./db/db.json", JSON.stringify(parsedNotes),(err) => console.log(err) );
     });
 
     const response = {
@@ -72,16 +65,9 @@ app.post('/api/notes', (req, res) => {
   }
 });
 
-// BONUS - DELETE /api/notes/:id should receive a query parameter that contains the id of a note to delete. To delete a note, you'll need to read all notes from the db.json file, remove the note with the given id property, and then rewrite the notes to the db.json file.
-const deleteNote = (id) =>
-  fetch(`/api/notes/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+
 
 
 app.listen(PORT, () =>
-  console.log(`Example app listening at http://localhost:${PORT}`)
+  console.log(`App listening at http://localhost:${PORT} 🚀`)
 );
