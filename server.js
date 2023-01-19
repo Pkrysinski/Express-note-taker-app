@@ -6,7 +6,7 @@ const notes = require('./db/db.json');
 const uuid = require('./helpers/uuid');
 
 // Set the port to be either what Heroku uses, or our defaul localhost:3001
-const PORT = process.env.port || 3001;
+const PORT = process.env.PORT || 3001;
 
 const app = express();
 
