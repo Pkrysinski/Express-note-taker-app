@@ -16,10 +16,10 @@
 ## Walkthrough Video
 
 The URL of the deployed application...
-(TODO - Link to deployed app)
+https://infinite-brook-47857.herokuapp.com/
 
 The URL of the GitHub repository...
-(TODO - Link to GitHub repo)
+https://github.com/Pkrysinski/Express-note-taker-app
 
 ## User Story
 
