@@ -48,6 +48,19 @@ const readAndAppend = (content, file) => {
   });
 };
 
+// Function to remove an object from an array, based on ID
+const removeObjectWithId = (array, id) => {
+  const objectWithID = array.findIndex((obj) => obj.id === id);
+
+  // Make sure that object with ID exists in array, then use splice method to remove.
+  if (objectWithID > -1) {
+    array.splice(objectWithID, 1);
+  }
+
+  // Return the new array
+  return array;
+}
+
 // Wildcard route to direct users to the index.html page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
@@ -63,7 +76,7 @@ app.get('/api/notes', (req, res) => {
   readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
 });
 
-//POST route for adding a note
+// POST route for adding a note
 app.post('/api/notes', (req, res) => {
 
   // Destructuring assignment for the items in req.body
@@ -89,10 +102,40 @@ app.post('/api/notes', (req, res) => {
     res.status(201).json(response);
   } else {
     res.status(500).json('Error in posting note');
-  }
+  };
 });
 
+// DELETE route for deleting a note
+app.delete('/api/notes/:id', (req, res) => {
 
+  let id = req.params.id;
+
+  if(id) {
+    fs.readFile('./db/db.json', 'utf8', (err, data) => {
+      if (err) {
+        console.error(err);
+      } else {
+        // Read data
+        const parsedData = JSON.parse(data);
+  
+        // Delete Item (remove from the array)
+        removeObjectWithId(parsedData,id);
+  
+        // Write data
+        writeToFile('./db/db.json', parsedData);
+  
+        // Return new data back to UI
+        const response = {
+          status: 'success',
+          body: parsedData,
+        };
+        res.status(201).json(response);      
+      };
+    });
+  } else {
+    res.status(500).json('Error in deleting note');    
+  };
+});
 
 
 app.listen(PORT, () =>
