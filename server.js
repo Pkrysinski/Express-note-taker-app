@@ -5,6 +5,7 @@ const util = require('util');
 const notes = require('./db/db.json');
 const uuid = require('./helpers/uuid');
 
+// Set the port to be either what Heroku uses, or our defaul localhost:3001
 const PORT = process.env.port || 3001;
 
 const app = express();
@@ -14,6 +15,38 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
+
+// Promise version of fs.readFile
+const readFromFile = util.promisify(fs.readFile);
+
+/**
+ *  Function to write data to the JSON file given a destination and some content
+ *  @param {string} destination The file you want to write to.
+ *  @param {object} content The content you want to write to the file.
+ *  @returns {void} Nothing
+ */
+const writeToFile = (destination, content) =>
+  fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
+    err ? console.error(err) : console.info(`\nData written to ${destination}`)
+  );
+
+/**
+ *  Function to read data from a given a file and append some content
+ *  @param {object} content The content you want to append to the file.
+ *  @param {string} file The path to the file you want to save to.
+ *  @returns {void} Nothing
+ */
+const readAndAppend = (content, file) => {
+  fs.readFile(file, 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+    } else {
+      const parsedData = JSON.parse(data);
+      parsedData.push(content);
+      writeToFile(file, parsedData);
+    }
+  });
+};
 
 // Wildcard route to direct users to the index.html page
 app.get('/', (req, res) => {
@@ -26,12 +59,12 @@ app.get('/notes', (req, res) => {
 });
 
 // Get the notes
-app.get('/api/notes', (req, res) => res.json(notes));
+app.get('/api/notes', (req, res) => {
+  readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
+});
 
 //POST route for adding a note
 app.post('/api/notes', (req, res) => {
-  // Log that a POST request was received
-  console.info(`${req.method} request received to add a note`);
 
   // Destructuring assignment for the items in req.body
   const { title, text } = req.body;
@@ -45,20 +78,14 @@ app.post('/api/notes', (req, res) => {
       id: uuid(),
     };
 
-    // Write the string to a file
-    fs.readFile('./db/db.json', 'utf-8', function(err, data){
-      var parsedNotes = JSON.parse(data);
-      parsedNotes.push(newNote);
-  
-      fs.writeFile("./db/db.json", JSON.stringify(parsedNotes),(err) => console.log(err) );
-    });
+    // Read the db.json file, and append new note (aka refresh page)
+    readAndAppend(newNote, './db/db.json');    
 
     const response = {
       status: 'success',
       body: newNote,
     };
 
-    console.log(response);
     res.status(201).json(response);
   } else {
     res.status(500).json('Error in posting note');
