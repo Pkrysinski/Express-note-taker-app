@@ -64,6 +64,6 @@ THEN I am presented with empty fields to enter a new note title and the note’s
 
 - - - - -
 BONUS!
-WHEN I click on the delete note idon,
+WHEN I click on the delete note icon,
 THEN the note is removed from storage and the page is refreshed.
 >DONE.
