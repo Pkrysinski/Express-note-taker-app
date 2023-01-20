@@ -2,7 +2,7 @@
 
 ## Purpose
 
-(TODO - ENTER PURPOSE)
+The purpose of this app is to showcase the below educational concepts implemented.  We started with some starter code (a fully developed front end), and we had to build the back end (the server.js code that lives on the server) to handle api requests with HTTP methods for GET, POST, and DELETE, to handle user functionality for a note-keeping app.  The user should be able to add, edit, and remove notes in the app.
 
 ## Educational Concepts Implemented
 >Node JS
